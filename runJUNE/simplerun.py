@@ -15,13 +15,13 @@ except KeyError:
 
 # This function must always be the same as the one in program.py
 def warmup_name(runcard, rname):
-    out = runcard + "+" + rname + ".tar.gz"
+    out = runcard + ".tar.gz"
     return out
 
 
 # This function must always be the same as the one in program.py
 def output_name(runcard, rname, seed):
-    out = "output-" + runcard + "-" + rname + "-" + seed + ".tar.gz"
+    out = "output-" + runcard + "-" + seed + ".tar.gz"
     return out
 
 
@@ -33,6 +33,16 @@ def parse_arguments():
     parser.add_option(
         "--executable_location", default="",
         help="GFAL path to executable tarball, relative to gfaldir.")
+    parser.add_option(
+        "--num_runs", default="",
+        help="number of runs submitted")
+    if 'world' in globals():
+        parser.add_option(
+            "--world", default="",
+            help="which world to run on")
+    # parser.add_option(
+    #     "--base_idx", default="",
+    #     help="initial idx (seed) of submission")
     return gf.parse_arguments(parser)
 
 
@@ -61,50 +71,57 @@ def download_runcard(input_folder, runcard, runname):
     tar = warmup_name(runcard, runname)
     gf.print_flush("downloading "+input_folder+"/"+tar)
     stat = gf.copy_from_grid(input_folder+"/"+tar, tar, args)
+    gf.print_flush("finished copying from grid storage... untarring now")
     stat += gf.untar_file(tar)
     return gf.do_shell("rm {0}".format(tar))+stat
 
 
-# def download_rivet(rivet_folder):
-#     tar = os.path.basename(rivet_folder)
-#     gf.print_flush("downloading "+rivet_folder)
-#     stat = gf.copy_from_grid(rivet_folder, "", args)
-#     stat += gf.untar_file(tar)
-#     rivet_dir = os.path.basename(os.path.splitext(rivet_folder)[0])
-#     os.environ['RIVET_ANALYSIS_PATH'] = os.getcwd()+"/"+rivet_dir
-#     return gf.do_shell("rm {0}".format(tar))+stat
+def download_world(input_folder, world):
+    world_file = world + ".hdf5"
+    gf.print_flush("downloading " + input_folder + "/worlds/" + world_file)
+    stat = gf.copy_from_grid(input_folder + "/worlds/" + world_file, world_file, args)
+    return stat
 
 
 # ------------------------- Actual run commands -------------------------
+def activate_environment():
+    os.system("bash JUNE/scripts/Miniconda3-latest-Linux-x86_64.sh -b -p ./miniconda")
+    os.system("echo Unpacking virtual environment")
+    os.system("mkdir -p JUNE_env")
+    os.system("tar -xzf JUNE/scripts/JUNE_env.tar.gz -C JUNE_env")
+    return None
+
+
+def deactivate_environment():
+    os.system("source JUNE_env/bin/deactivate")
+    return None
+
+
 def run_example(args):
     status = gf.do_shell("chmod +x {0}".format(args.executable))
     if status == 0:
-        status += gf.run_command("./{executable} {seed} {runcard} {outfile}".format(
+        activate_environment()
+        os.system("echo Attempting to activate venv and run simulation...")
+        status += gf.run_command("source JUNE_env/bin/activate && export PYTHONPATH=$PYTHONPATH:`pwd`/JUNE/ && ./{executable} --num_runs={num_runs} --idx={idx} --world={world} {runcard} {outfile}".format(
             executable=args.executable,
-            seed=args.seed,
+            num_runs=args.num_runs,
+            idx=args.seed,
+            world=args.world,
             runcard=args.runname,
             outfile="{0}.out".format(args.seed)))
+        deactivate_environment()
+        # status += gf.run_command("./{executable} {num_runs} {base_idx} {idx} {runcard} {outfile}".format(
+        #     executable=args.executable,
+        #     num_runs=args.num_runs,
+        #     base_idx=args.base_idx,
+        #     idx=args.seed,
+        #     runcard=args.runname,
+        #     outfile="{0}.out".format(args.seed)))
     return status
 
 
 # ------------------------- MAIN -------------------------
 if __name__ == "__main__":
-
-    # HEJ environment not needed for example;
-    # provides template for environment variable sourcing.
-    # if sys.argv[0] and "ENVSET" not in os.environ:
-    #     gf.print_flush("Setting environment")
-    #     os.environ["ENVSET"] = "ENVSET"
-    #     env = "/cvmfs/pheno.egi.eu/HEJ/HEJ_env.sh"
-
-    #     # os.execvp *replaces* the current process with that initiated:
-    #     # in this case, a new python instance running simplerun.py, but
-    #     # with the specified BASH environment sourced.
-    #     os.execvp("bash", ["bash", "-c",
-    #                        "source " + env + " && exec python " +
-    #                        sys.argv[0] + ' "${@}"',
-    #                        "--"] + sys.argv[1:])
-
     # Generic startup:
     start_time = datetime.datetime.now()
     gf.print_flush("Start time: {0}".format(
@@ -142,13 +159,16 @@ if __name__ == "__main__":
 
     status = download_program(args.executable_location)
     status += download_runcard(args.input_folder, args.runcard, args.runname)
+    if 'world' in globals():
+        status += download_world(args.input_folder, args.world)
 
     if status != 0:
         gf.print_flush("download failed")
         gf.end_program(status)
 
     download_time = datetime.datetime.now()
-
+    
+    gf.print_flush("executing executable...")
     status += run_example(args)
 
     if status != 0:
@@ -166,7 +186,7 @@ if __name__ == "__main__":
     gf.print_file("download time:    "+str(download_time-setup_time))
     gf.print_file("total runtime:    "+str(run_time-download_time))
 
-    status += gf.tar_this(local_out, "*.log *.out {rc}/results".format(rc=args.runname))
+    status += gf.tar_this(local_out, "*.log {rc}/results".format(rc=args.runname))
 
     status += gf.copy_to_grid(local_out, output_file, args)
 

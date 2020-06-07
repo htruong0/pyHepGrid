@@ -492,7 +492,7 @@ class Backend(_mode):
 
         from pyHepGrid.src.header import finalise_no_cores as n_threads
         # Check which of the seeds actually produced some data
-        all_remote = self.output_name_array(self.rcard, self.rfolder, seeds)
+        all_remote = self.output_name_array("", self.rcard, seeds)
         all_output = self.gridw.get_dir_contents(header.grid_output_dir).split()
         remote_tarfiles = list(set(all_remote) & set(all_output))
         logger.info("Found data for {0} of the {1} seeds.".format(
@@ -502,16 +502,15 @@ class Backend(_mode):
         tarfiles = self._multirun(
             self._do_get_data, remote_tarfiles, n_threads, use_counter=True)
         tarfiles = list(filter(None, tarfiles))
-        logger.info("Downloaded 0 files", end='\r')
-        logger.info("Downloaded {0} files, extracting...".format(len(tarfiles)))
+        logger.info("Downloaded {0} files".format(len(tarfiles)))
 
         # Extract some information from the first tarfile
-        for tarfile in tarfiles:
-            if self._extract_output_warmup_data(tarfile):
-                break
+        # for tarfile in tarfiles:
+        #     if self._extract_output_warmup_data(tarfile):
+        #         break
 
         # Extract all
-        self._multirun(self._do_extract_outputData, tarfiles, n_threads)
+        # self._multirun(self._do_extract_outputData, tarfiles, n_threads)
         os.chdir("..")
         logger.info("Everything saved at {0}".format(pathfolder))
         util.spCall(["mv", self.rfolder, pathfolder])
@@ -520,16 +519,16 @@ class Backend(_mode):
         """ Multithread wrapper used in get_data_production
         to download information from the grid storage
         """
-        local_name = filename.replace("output", "")
+        local_name = filename
         local_file = self.rfolder + "/" + local_name
         self.gridw.bring(filename, header.grid_output_dir,
-                         local_file, timeout=header.timeout)
-        if os.path.isfile(local_name):
+                         local_file)
+        if os.path.isfile(local_file):
             global counter
             if counter:
                 counter.value += 1
                 logger.info("Downloaded {0} files ".format(
-                    counter.value), end='\r')
+                    counter.value))
             return local_name
         else:
             return None

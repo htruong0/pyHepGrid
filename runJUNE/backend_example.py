@@ -81,26 +81,26 @@ class ExampleProgram(ProgramInterface):
         for idx, runName in enumerate(runFolders):
             local = False
 
-            tarfile = runName + "+" + dCards[runName] + ".tar.gz"
-            base_folder = runName.split("-")[0]
-            logger.info(
-                "Initialising {0} to {1} [{2}/{3}]".format(
-                    runName, tarfile, idx + 1, len(runFolders)))
+            tarfile = runName + ".tar.gz"
+            # base_folder = runName.split("-")[0]
+            # logger.info(
+            #     "Initialising {0} to {1} [{2}/{3}]".format(
+            #         runName, tarfile, idx + 1, len(runFolders)))
 
-            # runcards
-            run_dir = os.path.join(runFol, base_folder)
-            runFiles = dCards[runName].split("+")
-            for f in runFiles:
-                f = os.path.join(run_dir, f)
-                self._file_exists(f, logger)
-                os.system("cp -r " + f + " " + tmpdir)
+            # # runcards
+            # run_dir = os.path.join(runFol, base_folder)
+            # runFiles = dCards[runName].split("+")
+            # for f in runFiles:
+            #     f = os.path.join(run_dir, f)
+            #     self._file_exists(f, logger)
+            #     os.system("cp -r " + f + " " + tmpdir)
 
-            # warmup files
-            for f in self._WARMUP_FILES:
-                f = os.path.join(warmup_base, base_folder, f)
-                self._file_exists(f, logger)
-                os.system("cp -r " + f + " " + tmpdir)
-
+            # # warmup files
+            # for f in self._WARMUP_FILES:
+            #     f = os.path.join(warmup_base, base_folder, f)
+            #     self._file_exists(f, logger)
+            #     os.system("cp -r " + f + " " + tmpdir)
+            logger.info("Sending JUNE code to Grid storage.")
             upload_data = True
             if self.gridw.checkForThis(tarfile, grid_input_dir):
                 if not self._press_yes_to_continue(
@@ -114,16 +114,42 @@ class ExampleProgram(ProgramInterface):
 
             if upload_data:
                 # tar up & send to grid storage
-                print("Tarring and sending to grid.")
-                self.tarw.tarFiles(self._WARMUP_FILES + runFiles, tarfile)
-
+                # self.tarw.tarFiles(self._WARMUP_FILES + runFiles, tarfile)
                 if self.gridw.checkForThis(tarfile, grid_input_dir):
                     logger.info(
                         "Removing old version of {0} from Grid Storage".format(
                             tarfile))
                     self.gridw.delete(tarfile, grid_input_dir)
                 logger.info("Sending {0} to {1}".format(tarfile, grid_input_dir))
-                self.gridw.send(tarfile, grid_input_dir)
+                os.system("gfal-copy {0} {1}".format(origdir + "/" + tarfile, header.gfaldir + grid_input_dir))
+                # self.gridw.send(tarfile, grid_input_dir)
+
+        if header.world_list:
+            world_list = header.world_list
+            for world in world_list:
+                upload_world = True
+                world_file = "{0}.hdf5".format(world)
+                world_path = grid_input_dir + "/worlds"
+                if self.gridw.checkForThis(world_file, world_path):
+                    if not self._press_yes_to_continue(
+                        "Old {0} found. Do you want to remove it?".format(world_file),
+                        fallback=1):
+                        logger.info(
+                            F"Removing old version of {world_file} from Grid Storage")
+                        self.gridw.delete(world_file, world_path)
+                    else:
+                        upload_world = False
+
+                if upload_world:
+                    print("Sending {0} to Grid Storage.".format(world_file))
+                    if self.gridw.checkForThis(world_file, world_path):
+                        logger.info(
+                            "Removing old version of {0} from Grid Storage".format(
+                                world_file))
+                        self.gridw.delete(world_file, world_path)
+                    logger.info("Sending {0} to {1}".format(world_file, world_path))
+                    os.system("gfal-copy {0} {1}".format(origdir + "/" + world_file, header.gfaldir + world_path))
+                    
 
         # clean up afterwards
         os.chdir(origdir)
@@ -132,4 +158,8 @@ class ExampleProgram(ProgramInterface):
     def include_arguments(self, argument_dict):
         # Pass custom argument to run script
         argument_dict["executable_location"] = header.grid_executable
+        argument_dict["num_runs"] = header.producRun
+        if 'world' in globals():
+            argument_dict["world"] = header.world
+        # argument_dict["base_idx"] = header.baseSeed
         return argument_dict

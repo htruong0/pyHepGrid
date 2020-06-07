@@ -159,6 +159,7 @@ def simulation(args):
     geography.companies = Companies.for_geography(geography)
     geography.care_homes = CareHomes.for_geography(geography)
     demography = Demography.for_geography(geography)
+    gf.print_flush("Geography and demography generated...")
     world = World(geography, demography, include_households=True, include_commute=False)
 
     gf.print_flush("World generated...")

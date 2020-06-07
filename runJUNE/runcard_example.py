@@ -42,8 +42,8 @@ runmode = "backend_example.ExampleProgram"
 
 runfile = juneDir+"/simplerun.py"
 
-world_list = ["test_world"]
-world = "test_world"
+# world_list = ["test_world"]
+# world = "test_world"
 
 # path to your executable: src_dir/exe
 executable_src_dir = juneDir

@@ -36,10 +36,9 @@ def parse_arguments():
     parser.add_option(
         "--num_runs", default="",
         help="number of runs submitted")
-    if 'world' in globals():
-        parser.add_option(
-            "--world", default="",
-            help="which world to run on")
+    parser.add_option(
+        "--world", default="",
+        help="which world to run on")
     # parser.add_option(
     #     "--base_idx", default="",
     #     help="initial idx (seed) of submission")
@@ -85,7 +84,8 @@ def download_world(input_folder, world):
 
 # ------------------------- Actual run commands -------------------------
 def activate_environment():
-    os.system("bash JUNE/scripts/Miniconda3-latest-Linux-x86_64.sh -b -p ./miniconda")
+    os.system("wget -O JUNE/scripts/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh")
+    os.system("bash JUNE/scripts/miniconda.sh -b -p ./miniconda")
     os.system("echo Unpacking virtual environment")
     os.system("mkdir -p JUNE_env")
     os.system("tar -xzf JUNE/scripts/JUNE_env.tar.gz -C JUNE_env")
@@ -94,6 +94,8 @@ def activate_environment():
 
 def deactivate_environment():
     os.system("source JUNE_env/bin/deactivate")
+    os.system("rm -rf JUNE_env")
+    os.system("rm -rf JUNE")
     return None
 
 
@@ -159,7 +161,7 @@ if __name__ == "__main__":
 
     status = download_program(args.executable_location)
     status += download_runcard(args.input_folder, args.runcard, args.runname)
-    if 'world' in globals():
+    if args.world is not '':
         status += download_world(args.input_folder, args.world)
 
     if status != 0:

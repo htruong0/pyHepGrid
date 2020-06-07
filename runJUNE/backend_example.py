@@ -124,7 +124,7 @@ class ExampleProgram(ProgramInterface):
                 os.system("gfal-copy {0} {1}".format(origdir + "/" + tarfile, header.gfaldir + grid_input_dir))
                 # self.gridw.send(tarfile, grid_input_dir)
 
-        if header.world_list:
+        if hasattr(header, 'world_list'):
             world_list = header.world_list
             for world in world_list:
                 upload_world = True
@@ -159,7 +159,7 @@ class ExampleProgram(ProgramInterface):
         # Pass custom argument to run script
         argument_dict["executable_location"] = header.grid_executable
         argument_dict["num_runs"] = header.producRun
-        if 'world' in globals():
+        if hasattr(header, 'world'):
             argument_dict["world"] = header.world
         # argument_dict["base_idx"] = header.baseSeed
         return argument_dict

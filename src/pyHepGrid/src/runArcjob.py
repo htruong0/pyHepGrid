@@ -3,6 +3,7 @@ from datetime import datetime
 import pyHepGrid.src.utilities as util
 import pyHepGrid.src.header as header
 import pyHepGrid.src.socket_api as sapi
+import time
 
 
 class RunArc(Backend):
@@ -89,8 +90,16 @@ class RunArc(Backend):
             if split_dur_ce and ".dur.scotgrid.ac.uk" in ce:
                 ce = random.choice(
                     ["ce1.dur.scotgrid.ac.uk", "ce2.dur.scotgrid.ac.uk"])
+            # if split_dur_ce:
+            #     ce = random.choice(
+            #         ["ce01.tier2.hep.manchester.ac.uk", "ce02.tier2.hep.manchester.ac.uk"])
+
+            # if split_dur_ce:
+            #     ce = random.choice(
+            #         ["arc-ce03.gridpp.rl.ac.uk", "arc-ce04.gridpp.rl.ac.uk"])
 
         cmd = "arcsub -c {0} {1} -j {2}".format(ce, filename, self.arcbd)
+        print(cmd)
         # Can only use direct in Durham. Otherwise fails!
         # Speeds up submission (according to Stephen)
         if arc_direct and ".dur.scotgrid.ac.uk" in ce:
@@ -228,29 +237,33 @@ class RunArc(Backend):
         Wrapper for passing to multirun, where args is a tuple of each argument
         required. Would be easier if multirun used starmap...
         """
-        r, dcard, seed, jobName, baseSeed, test, jobids = args
+        r, dcard, seed, jobName, baseSeed, test, jobids, count, memory = args
         arguments = self._get_prod_args(r, dcard, seed)
         dictData = {'arguments': arguments,
                     'jobName': jobName,
-                    'count': str(1),
-                    'countpernode': str(1), }
+                    'count': str(count),
+                    'countpernode': str(count),
+                    'memory' :  str(memory),}
+        print(dictData)
         xrslfile = self._write_XRSL(dictData, filename=None)
         if(seed == baseSeed):
             header.logger.debug(
                 " > Path of xrsl file for seed {1}: {0}".format(xrslfile, seed))
-
         # Run the file
         jobid, retcode = self._run_XRSL(
             xrslfile, test=test, include_retcode=True)
         if int(retcode) != 0:
             jobid = "None"
         jobids.append(jobid)
+        time.sleep(0.5)
         return jobid
 
     def arg_iterator(self, r, dCards, jobName, baseSeed, producRun, test,
-                     jobids):
+                     jobids, count, memory):
         for seed in range(baseSeed, baseSeed + producRun):
-            yield (r, dCards[r], seed, jobName, baseSeed, test, jobids)
+        # for seed in [67, 76, 82, 217, 226, 228, 232, 233]: #run 3 resubmits p2
+        # for seed in [81, 206, 208]: #run 1 resubmits
+            yield (r, dCards[r], seed, jobName, baseSeed, test, jobids, count, memory)
 
     def run_wrap_production(self, test=None):
         """
@@ -258,7 +271,7 @@ class RunArc(Backend):
         happend Writes XRSL file with the appropiate information and send a
         producrun number of jobs to the arc queue
         """
-        from pyHepGrid.src.header import baseSeed, producRun, jobName
+        from pyHepGrid.src.header import baseSeed, producRun, jobName, count, memory
 
         # runcard names (keys)
         # dCards, dictionary of { 'runcard' : 'name' }
@@ -287,7 +300,7 @@ class RunArc(Backend):
             # Use shared memory list in case of submission failure
             jobids = Manager().list()
             arg_sets = self.arg_iterator(
-                r, dCards, jobName, baseSeed, producRun, test, jobids)
+                r, dCards, jobName, baseSeed, producRun, test, jobids, count, memory)
 
             try:
                 joblist = self._multirun(self.run_single_production, arg_sets,

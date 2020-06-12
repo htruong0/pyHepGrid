@@ -230,7 +230,7 @@ ARCSCRIPTDEFAULT = ['&',
                     '(stdout       = "stdout")',
                     '(stderr       = "stderr")',
                     '(gmlog        = "testjob.log")',
-                    '(memory       = "100")',
+                    # '(memory       = "100")',
                     ('(inputFiles   = ("{file}" "{path}")'
                         '("{helper}" "{hpath}"))').format(
                             file=os.path.basename(runfile), path=runfile,
@@ -251,6 +251,8 @@ DIRACSCRIPTDEFAULT = [
     'InputSandbox  = {{"{0}", "{1}"}};'.format(runfile, grid_helper),
     'OutputSandbox = {"StdOut","StdErr"};',
     'Platform = "{0}";'.format(dirac_platform),
+    'NumberOfProcessors = "{0}";'.format(count),
+    # 'Tags = "{0}GBMemory";'.format(totalmemory)
 ]
 
 # If Dirac banned sites are specified, include them in JDL

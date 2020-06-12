@@ -96,6 +96,8 @@ class RunDirac(Backend):
             self.check_for_existing_output(r, dCards[r])
             jdlfile = None
             args = self._get_prod_args(r, dCards[r], "%s")
+            print(args)
+            print(self.templ)
             joblist, remaining_seeds, seed_start = [], producRun, baseSeed
             while remaining_seeds > 0:
                 no_seeds = min(increment, remaining_seeds)

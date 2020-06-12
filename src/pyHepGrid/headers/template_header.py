@@ -26,6 +26,10 @@ jobName = "testjob"
 debug_level = 0
 copy_log = False
 stacksize = 50  # MB
+memory = 2048
+count = 1
+countpernode = 1
+# totalmemory = 1
 
 # Grid folder config
 grid_input_dir = "input"
@@ -35,20 +39,20 @@ runfile = "nnlorun.py"
 
 gfaldir = ("xroot://se01.dur.scotgrid.ac.uk/dpm/dur.scotgrid.ac.uk/home/"
            "pheno/{0}/").format(getuser())
-cvmfs_gfal_location = "/cvmfs/dirac.egi.eu/dirac/pro/" +\
-                      "Linux_x86_64_glibc-2.17/bin/"
+# cvmfs_gfal_location = "/cvmfs/dirac.egi.eu/dirac/pro/" +\
+#                       "Linux_x86_64_glibc-2.17/bin/"
 
 # TMUX config
 tmux_location = "tmux"
 
 # Lhapdf config
-lhapdf_grid_loc = "location/relative/to/gfaldir/lhapdf.tar.gz"
-lhapdf_loc = "lhapdf"
-lhapdf_ignore_dirs = []  # Don't tar up all of LHAPDF if you don't want to
-lhapdf_central_scale_only = True  # Only tar up central [0000.dat] PDF sets
-lhapdf = "/path/to/lhapdf"
-use_cvmfs_lhapdf = False
-cvmfs_lhapdf_location = "/cvmfs/pheno.egi.eu/lhapdf/6.1.6"
+# lhapdf_grid_loc = "location/relative/to/gfaldir/lhapdf.tar.gz"
+# lhapdf_loc = "lhapdf"
+# lhapdf_ignore_dirs = []  # Don't tar up all of LHAPDF if you don't want to
+# lhapdf_central_scale_only = True  # Only tar up central [0000.dat] PDF sets
+# lhapdf = "/path/to/lhapdf"
+# use_cvmfs_lhapdf = False
+# cvmfs_lhapdf_location = "/cvmfs/pheno.egi.eu/lhapdf/6.1.6"
 
 # Rivet config
 use_custom_rivet = False
@@ -79,6 +83,8 @@ short_stats = True
 
 # ARC parameters
 ce_base = "ce2.dur.scotgrid.ac.uk"
+# ce_base = "arc-ce01.gridpp.rl.ac.uk"
+
 ce_test = "ce-test.dur.scotgrid.ac.uk"
 ce_listfile = "computing_elements.txt"
 arcbase = "/path/to/ARC/base/.arc/jobs.dat"  # arc database

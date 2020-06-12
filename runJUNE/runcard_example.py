@@ -10,15 +10,18 @@ dictCard = {
 juneDir = os.path.dirname(os.path.realpath(__file__))
 
 # Run Variables
-
 # run-specific variables (overrides header.py variables)
 runcardDir = juneDir
 # number of concurrent jobs to submit
-producRun = 1
+producRun = 125
+# nth repeat of simulation
+run_num = 10
 # ARC jobname to appear in squeue output
-jobName = "JUNE"
+jobName = "JUNE (repeat {})".format(run_num)
 count = 8 # number of cores
 countpernode = 8
+memory = 3000 # memory per core (so 8 cores * 2048 MB = 16GB)
+# totalmemory = 24 # for DIRAC
 
 # ARC's jobs database: put this wherever you want
 arcbase = os.path.expanduser("~/.arc/jobs.dat")
@@ -31,7 +34,7 @@ copy_log = True
 
 # automatically pick next unused seed
 # baseSeed = dbapi.get_next_seed(dbname=dbname) + 1
-baseSeed = 0  # (setting seed manually)
+baseSeed = 125  # (setting seed manually)
 
 # Project-level Variables
 
@@ -42,8 +45,11 @@ runmode = "backend_example.ExampleProgram"
 
 runfile = juneDir+"/simplerun.py"
 
-# world_list = ["test_world"]
-# world = "test_world"
+world_list = ["north_east_yorkshire"]
+world = "north_east_yorkshire"
+# world_list = ['test_world']
+# world = 'test_world'
+latin_hypercube = "lhs_array"
 
 # path to your executable: src_dir/exe
 executable_src_dir = juneDir
@@ -53,7 +59,7 @@ else:
     executable_exe = "run_script_world.py"
 
 grid_input_dir = "JUNE/input"
-grid_output_dir = "JUNE/output"
+grid_output_dir = "JUNE/output/Run_{}".format(run_num)
 # grid_warmup_dir = "example/warmup" # not used
 
 provided_warmup_dir = runcardDir
@@ -64,7 +70,7 @@ grid_executable = "JUNE/executable.tar.gz"
 # User Variables
 
 # your DIRAC username: only needed if you run on DIRAC.
-# dirac_name = "your.username"
+dirac_name = "henry.truong"
 
 # custom post-run local download (and processing) script
 # finalisation_script = "path/to/your/script.py"

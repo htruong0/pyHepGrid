@@ -115,28 +115,28 @@ def parse_arguments(parser=None):
         help="gfal output folder, relative to gfaldir", default="output")
     parser.add_option("-g", "--gfaldir", help="gfaldir",
                       default=default_user_gfal)
-    parser.add_option(
-        "--gfal_location", default="",
-        help="Provide a specific location for gfal executables [intended for "
-        "cvmfs locations]. Default is the environment gfal.")
+    # parser.add_option(
+    #     "--gfal_location", default="",
+    #     help="Provide a specific location for gfal executables [intended for "
+    #     "cvmfs locations]. Default is the environment gfal.")
 
     # LHAPDF options
-    parser.add_option("--use_cvmfs_lhapdf", default=True)
-    parser.add_option(
-        "--cvmfs_lhapdf_location", default="",
-        help="Provide a cvmfs location for LHAPDF.")
-    parser.add_option(
-        "--lhapdf_grid", help="absolute value of lhapdf location or relative to"
-        " gfaldir",
-        default="util/lhapdf.tar.gz")
-    parser.add_option(
-        "--lhapdf_local", help="name of LHAPDF folder local to the sandbox",
-        default="lhapdf")
+    # parser.add_option("--use_cvmfs_lhapdf", default=True)
+    # parser.add_option(
+    #     "--cvmfs_lhapdf_location", default="",
+    #     help="Provide a cvmfs location for LHAPDF.")
+    # parser.add_option(
+    #     "--lhapdf_grid", help="absolute value of lhapdf location or relative to"
+    #     " gfaldir",
+    #     default="util/lhapdf.tar.gz")
+    # parser.add_option(
+    #     "--lhapdf_local", help="name of LHAPDF folder local to the sandbox",
+        # default="lhapdf")
 
     # Rivet options
-    parser.add_option("--use_custom_rivet", default=False)
-    parser.add_option("--rivet_folder", default="Wjets/Rivet/Rivet.tgz",
-                      help="Provide the location of RivetAnalyses tarball.")
+    # parser.add_option("--use_custom_rivet", default=False)
+    # parser.add_option("--rivet_folder", default="Wjets/Rivet/Rivet.tgz",
+    #                   help="Provide the location of RivetAnalyses tarball.")
 
     # Socket options
     parser.add_option("-S", "--Sockets", help="Activate socketed run",
@@ -169,9 +169,9 @@ def parse_arguments(parser=None):
             "You need to enable one and only one of production and warmup")
 
     # Fix bools
-    options.copy_log = to_bool(options.copy_log)
-    options.use_cvmfs_lhapdf = to_bool(options.use_cvmfs_lhapdf)
-    options.use_custom_rivet = to_bool(options.use_custom_rivet)
+    # options.copy_log = to_bool(options.copy_log)
+    # options.use_cvmfs_lhapdf = to_bool(options.use_cvmfs_lhapdf)
+    # options.use_custom_rivet = to_bool(options.use_custom_rivet)
 
     # Pedantic checks
     if options.Production:
@@ -282,8 +282,9 @@ def _remove_file(filepath, args, tries=5, protocol=None):
     if protocol:
         prot = args.gfaldir.split(":")[0]
         filepath = filepath.replace(prot, protocol, 1)
-    rmcmd = "{gfal_loc}gfal-rm {f}".format(f=filepath,
-                                           gfal_loc=args.gfal_location)
+    # rmcmd = "{gfal_loc}gfal-rm {f}".format(f=filepath,
+    #                                        gfal_loc=args.gfal_location)
+    rmcmd = "gfal-rm {f}".format(f=filepath)
 
     file_present = _test_file_presence(filepath, args)
     tried = 0
@@ -328,8 +329,9 @@ def _test_file_presence(filepath_in, args, protocol=None):
             filepath = filepath_in.replace(prot, loop_prot, 1)
 
         filename = os.path.basename(filepath)
-        lscmd = "{gfal_loc}gfal-ls -t {timeout} {file}".format(
-            gfal_loc=args.gfal_location, file=filepath, timeout=GFAL_TIMEOUT)
+        # lscmd = "{gfal_loc}gfal-ls -t {timeout} {file}".format(
+        #     gfal_loc=args.gfal_location, file=filepath, timeout=GFAL_TIMEOUT)
+        lscmd = "gfal-ls -t {timeout} {file}".format(file=filepath, timeout=GFAL_TIMEOUT)
         if DEBUG_LEVEL > 1:
             print_flush(lscmd)
         try:
@@ -357,8 +359,10 @@ def _get_hash(filepath, args, algo="MD5", protocol=None):
     if protocol:
         prot = args.gfaldir.split(":")[0]
         filepath = filepath.replace(prot, protocol, 1)
-    hashcmd = "{gfal_loc}gfal-sum -t {timeout} {file} {checksum}".format(
-        gfal_loc=args.gfal_location, file=filepath, checksum=algo,
+    # hashcmd = "{gfal_loc}gfal-sum -t {timeout} {file} {checksum}".format(
+    #     gfal_loc=args.gfal_location, file=filepath, checksum=algo,
+    #     timeout=GFAL_TIMEOUT)
+    hashcmd = "gfal-sum -t {timeout} {file} {checksum}".format(file=filepath, checksum=algo,
         timeout=GFAL_TIMEOUT)
     if DEBUG_LEVEL > 1:
         print_flush(hashcmd)
@@ -398,8 +402,10 @@ def _grid_copy(infile, outfile, args, maxrange=MAX_COPY_TRIES):
 
             print_flush("Attempting Protocol {0}".format(protocol))
 
-            cmd = "{2}gfal-copy -f -p {0} {1}".format(
-                infile_tmp, outfile_tmp, args.gfal_location)
+            # cmd = "{2}gfal-copy -f -p {0} {1}".format(
+            #     infile_tmp, outfile_tmp, args.gfal_location)
+            cmd = "gfal-copy -f -p {0} {1}".format(
+                infile_tmp, outfile_tmp)
             if DEBUG_LEVEL > 1:
                 print_flush(cmd)
             retval = os.system(cmd)
@@ -463,8 +469,8 @@ def print_node_info(outputfile):
     do_shell("hostname >> {0}".format(outputfile))
     do_shell("gcc --version >> {0}".format(outputfile))
     do_shell("python --version >> {0}".format(outputfile))
-    do_shell(
-        "(python3 --version || echo no python3) >> {0}".format(outputfile))
+    # do_shell(
+    #     "(python3 --version || echo no python3) >> {0}".format(outputfile))
     do_shell("gfal-copy --version >> {0}".format(outputfile))
     do_shell("cat {0}".format(outputfile))  # print to log
 

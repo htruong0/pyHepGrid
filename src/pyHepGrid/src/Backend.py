@@ -641,25 +641,25 @@ class Backend(_mode):
         # Defaults arguments that can always go in
         dictionary = {
             'gfaldir': header.gfaldir,
-            'gfal_location': header.cvmfs_gfal_location,
+            # 'gfal_location': header.cvmfs_gfal_location,
             'executable': header.executable_exe,
             'input_folder': header.grid_input_dir,
             'output_folder': header.grid_output_dir,
             'warmup_folder': header.grid_warmup_dir,
             'debug': str(header.debug_level),
             "copy_log": bool(header.copy_log),
-            "use_cvmfs_lhapdf": bool(header.use_cvmfs_lhapdf),
-            'lhapdf_grid': header.lhapdf_grid_loc,
-            'lhapdf_local': header.lhapdf_loc,
-            'events': str(header.events),
-            "use_custom_rivet": bool(header.use_custom_rivet),
+            # "use_cvmfs_lhapdf": bool(header.use_cvmfs_lhapdf),
+            # 'lhapdf_grid': header.lhapdf_grid_loc,
+            # 'lhapdf_local': header.lhapdf_loc,
+            # 'events': str(header.events),
+            # "use_custom_rivet": bool(header.use_custom_rivet),
         }
-        if dictionary["use_cvmfs_lhapdf"]:
-            dictionary.update({
-                "cvmfs_lhapdf_location": header.cvmfs_lhapdf_location})
-        if dictionary["use_custom_rivet"]:
-            dictionary.update({
-                "rivet_folder": header.grid_rivet_dir})
+        # if dictionary["use_cvmfs_lhapdf"]:
+        #     dictionary.update({
+        #         "cvmfs_lhapdf_location": header.cvmfs_lhapdf_location})
+        # if dictionary["use_custom_rivet"]:
+        #     dictionary.update({
+        #         "rivet_folder": header.grid_rivet_dir})
         return dictionary
 
     def _make_base_argstring(self, runcard, runtag):

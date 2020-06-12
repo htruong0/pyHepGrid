@@ -149,6 +149,30 @@ class ExampleProgram(ProgramInterface):
                         self.gridw.delete(world_file, world_path)
                     logger.info("Sending {0} to {1}".format(world_file, world_path))
                     os.system("gfal-copy {0} {1}".format(origdir + "/" + world_file, header.gfaldir + world_path))
+
+        if hasattr(header, 'latin_hypercube'):
+            lhs_file = header.latin_hypercube
+            upload_lhs = True
+            lhs_file = "{0}.npy".format(lhs_file)
+            if self.gridw.checkForThis(lhs_file, grid_input_dir):
+                if not self._press_yes_to_continue(
+                    "Old {0} found. Do you want to remove it?".format(lhs_file),
+                    fallback=1):
+                    logger.info(
+                        F"Removing old version of {lhs_file} from Grid Storage")
+                    self.gridw.delete(lhs_file, grid_input_dir)
+                else:
+                    upload_lhs = False
+
+            if upload_lhs:
+                print("Sending {0} to Grid Storage.".format(lhs_file))
+                if self.gridw.checkForThis(lhs_file, grid_input_dir):
+                    logger.info(
+                        "Removing old version of {0} from Grid Storage".format(
+                            lhs_file))
+                    self.gridw.delete(lhs_file, grid_input_dir)
+                logger.info("Sending {0} to {1}".format(lhs_file, grid_input_dir))
+                os.system("gfal-copy {0} {1}".format(origdir + "/" + lhs_file, header.gfaldir + grid_input_dir))
                     
 
         # clean up afterwards
@@ -158,8 +182,9 @@ class ExampleProgram(ProgramInterface):
     def include_arguments(self, argument_dict):
         # Pass custom argument to run script
         argument_dict["executable_location"] = header.grid_executable
-        argument_dict["num_runs"] = header.producRun
-        if hasattr(header, 'world'):
+        if hasattr(header, "world"):
             argument_dict["world"] = header.world
+        if hasattr(header, "latin_hypercube"):
+            argument_dict["latin_hypercube"] = header.latin_hypercube
         # argument_dict["base_idx"] = header.baseSeed
         return argument_dict

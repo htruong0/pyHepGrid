@@ -34,11 +34,11 @@ def parse_arguments():
         "--executable_location", default="",
         help="GFAL path to executable tarball, relative to gfaldir.")
     parser.add_option(
-        "--num_runs", default="",
-        help="number of runs submitted")
-    parser.add_option(
         "--world", default="",
         help="which world to run on")
+    parser.add_option(
+        "--latin_hypercube", default="lhs",
+        help="name of latin hypercube array")
     # parser.add_option(
     #     "--base_idx", default="",
     #     help="initial idx (seed) of submission")
@@ -81,6 +81,11 @@ def download_world(input_folder, world):
     stat = gf.copy_from_grid(input_folder + "/worlds/" + world_file, world_file, args)
     return stat
 
+def download_latin_hypercube(input_folder, latin_hypercube):
+    lhs = latin_hypercube + ".npy"
+    gf.print_flush("downloading " + input_folder + "/" + lhs)
+    stat = gf.copy_from_grid(input_folder + "/" + lhs, lhs, args)
+    return stat
 
 # ------------------------- Actual run commands -------------------------
 def activate_environment():
@@ -92,10 +97,14 @@ def activate_environment():
     return None
 
 
-def deactivate_environment():
+def deactivate_environment(args):
+    gf.print_flush("Cleaning up environment...")
     os.system("source JUNE_env/bin/deactivate")
     os.system("rm -rf JUNE_env")
     os.system("rm -rf JUNE")
+    os.system("rm -rf miniconda")
+    if args.world is not "":
+        os.system("rm {}.hdf5".format(args.world))
     return None
 
 
@@ -104,21 +113,13 @@ def run_example(args):
     if status == 0:
         activate_environment()
         os.system("echo Attempting to activate venv and run simulation...")
-        status += gf.run_command("source JUNE_env/bin/activate && export PYTHONPATH=$PYTHONPATH:`pwd`/JUNE/ && ./{executable} --num_runs={num_runs} --idx={idx} --world={world} {runcard} {outfile}".format(
+        status += gf.run_command("source JUNE_env/bin/activate && export PYTHONPATH=$PYTHONPATH:`pwd`/JUNE/ && ./{executable} --idx={idx} --world={world} --latin_hypercube={latin_hypercube} {runcard} {outfile}".format(
             executable=args.executable,
-            num_runs=args.num_runs,
             idx=args.seed,
             world=args.world,
+            latin_hypercube=args.latin_hypercube,
             runcard=args.runname,
             outfile="{0}.out".format(args.seed)))
-        deactivate_environment()
-        # status += gf.run_command("./{executable} {num_runs} {base_idx} {idx} {runcard} {outfile}".format(
-        #     executable=args.executable,
-        #     num_runs=args.num_runs,
-        #     base_idx=args.base_idx,
-        #     idx=args.seed,
-        #     runcard=args.runname,
-        #     outfile="{0}.out".format(args.seed)))
     return status
 
 
@@ -150,6 +151,8 @@ if __name__ == "__main__":
         gf.do_shell("env")
         gf.do_shell("voms-proxy-info --all")
 
+    gf.do_shell("hostname")
+
     setup_time = datetime.datetime.now()
 
     # Download executable:
@@ -163,6 +166,7 @@ if __name__ == "__main__":
     status += download_runcard(args.input_folder, args.runcard, args.runname)
     if args.world is not '':
         status += download_world(args.input_folder, args.world)
+        status += download_latin_hypercube(args.input_folder, args.latin_hypercube)
 
     if status != 0:
         gf.print_flush("download failed")
@@ -191,6 +195,7 @@ if __name__ == "__main__":
     status += gf.tar_this(local_out, "*.log {rc}/results".format(rc=args.runname))
 
     status += gf.copy_to_grid(local_out, output_file, args)
+    deactivate_environment(args)
 
     if gf.DEBUG_LEVEL > 1:
         gf.do_shell("ls")
